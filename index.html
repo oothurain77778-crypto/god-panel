@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>👑 God Panel</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root{
+    --bg:#12100c; --bg2:#1c1913; --card:#221e15; --card2:#2a2517;
+    --gold:#e8b93e; --gold2:#c9962a; --txt:#f2ead2; --dim:#a99e7d;
+    --red:#e05548; --green:#4cc26b; --line:#3a331f;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; background:var(--bg); color:var(--txt);
+       font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans Myanmar",sans-serif;
+       padding:0 0 84px 0;}
+  header{position:sticky; top:0; z-index:10; background:linear-gradient(180deg,#1a160d,#12100c);
+         padding:14px 16px 10px; border-bottom:1px solid var(--line);}
+  header h1{margin:0; font-size:21px; letter-spacing:.5px; color:var(--gold);}
+  header .sub{font-size:12px; color:var(--dim); margin-top:3px; display:flex; justify-content:space-between; align-items:center;}
+  .rbtn{background:var(--card2); color:var(--gold); border:1px solid var(--gold2);
+        padding:5px 12px; border-radius:20px; font-size:12px; cursor:pointer;}
+  .tabs{position:fixed; left:0; right:0; bottom:0; z-index:10; display:flex;
+        background:#171410; border-top:1px solid var(--line);}
+  .tabs button{flex:1; background:none; border:none; color:var(--dim); padding:11px 2px 13px;
+        font-size:12.5px; cursor:pointer;}
+  .tabs button.on{color:var(--gold); font-weight:700;}
+  .tabs button span{display:block; font-size:19px; margin-bottom:2px;}
+  main{padding:14px 14px 4px;}
+  .tab{display:none;} .tab.on{display:block;}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:13px;}
+  .stat b{font-size:23px; color:var(--gold); display:block;}
+  .stat small{color:var(--dim); font-size:12px;}
+  .stat.wide{grid-column:1/-1;}
+  .chips{display:flex; gap:7px; flex-wrap:wrap; margin:0 0 11px;}
+  .chip{background:var(--card); border:1px solid var(--line); color:var(--dim);
+        padding:6px 13px; border-radius:18px; font-size:12.5px; cursor:pointer;}
+  .chip.on{background:var(--gold); color:#171205; border-color:var(--gold); font-weight:700;}
+  input[type=text],input[type=number]{width:100%; background:var(--bg2); color:var(--txt);
+        border:1px solid var(--line); border-radius:11px; padding:11px 12px; font-size:14px; margin-bottom:11px; outline:none;}
+  input:focus{border-color:var(--gold2);}
+  .row{background:var(--card); border:1px solid var(--line); border-radius:13px; padding:11px 12px; margin-bottom:9px;}
+  .row .t{font-weight:600; font-size:14.5px; word-break:break-word;}
+  .row .m{font-size:12px; color:var(--dim); margin-top:3px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  .tag{font-size:10.5px; padding:2px 8px; border-radius:9px; background:var(--card2); color:var(--gold); border:1px solid var(--line);}
+  .tag.ub{color:#9ecfff;} .tag.cl{color:#ffc98a;}
+  .btns{display:flex; gap:7px; margin-top:9px; flex-wrap:wrap;}
+  button.act{background:var(--card2); color:var(--txt); border:1px solid var(--line);
+        padding:7px 12px; border-radius:10px; font-size:12.5px; cursor:pointer;}
+  button.act.gold{background:var(--gold); color:#171205; border-color:var(--gold); font-weight:700;}
+  button.act.red{color:#ffb3ab; border-color:#6e2d24;}
+  button.act:disabled{opacity:.38; cursor:default;}
+  .tgl{position:relative;}
+  .tgl b{color:var(--green);} .tgl.off b{color:var(--red);}
+  h3.sec{color:var(--gold); font-size:15px; margin:18px 0 9px;}
+  h3.sec:first-child{margin-top:2px;}
+  .empty{text-align:center; color:var(--dim); padding:36px 18px; font-size:14px; line-height:1.7;}
+  .note{font-size:11.5px; color:var(--dim); text-align:center; margin:14px 4px 4px; line-height:1.6;}
+  a.lnk{color:var(--gold); text-decoration:none; font-size:12.5px;}
+  .mono{font-family:monospace; font-size:12.5px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>👑 GOD PANEL</h1>
+  <div class="sub"><span id="gentime">data တင်နေတယ်…</span>
+  <button class="rbtn" id="refreshBtn">🔄 Refresh</button></div>
+</header>
+
+<main>
+  <div id="tab-dash" class="tab on">
+    <div class="grid" id="dashGrid"></div>
+    <div class="note" id="dashNote"></div>
+  </div>
+
+  <div id="tab-groups" class="tab">
+    <input type="text" id="gSearch" placeholder="🔍 Group ရှာမယ်…">
+    <div class="chips" id="gChips">
+      <button class="chip on" data-f="all">အားလုံး</button>
+      <button class="chip" data-f="main">⭐ Main</button>
+      <button class="chip" data-f="clone">🤖 Clones</button>
+      <button class="chip" data-f="userbot">👤 Userbots</button>
+    </div>
+    <div id="gList"></div>
+    <div class="note">Clone / Userbot group များက v1 မှာ ကြည့်ရန်သာ — toggle လုပ်လို့ မရသေးပါ။ Main group များသာ တိုက်ရိုက် ထိန်းနိုင်ပါတယ်။</div>
+  </div>
+
+  <div id="tab-bans" class="tab">
+    <h3 class="sec">🚫 Global Ban (GBAN)</h3>
+    <div style="display:flex; gap:8px;">
+      <input type="number" id="gbanInput" placeholder="user_id ထည့်ပါ" style="flex:1;">
+      <button class="act red" id="gbanBtn" style="height:44px;">GBAN</button>
+    </div>
+    <div id="gbanList"></div>
+    <h3 class="sec">🌐 Federation Bans</h3>
+    <div id="fedList"></div>
+  </div>
+
+  <div id="tab-fleet" class="tab">
+    <h3 class="sec">🤖 Clone Bots</h3>
+    <div id="cloneList"></div>
+    <h3 class="sec">👤 Userbots</h3>
+    <div id="ubList"></div>
+  </div>
+</main>
+
+<div id="fatal" class="empty" style="display:none;">📭 data မရသေးပါ<br>bot ကနေ /panel ပြန်ဖွင့်ပါ</div>
+
+<nav class="tabs">
+  <button data-t="dash" class="on"><span>👑</span>ပလ္လင်</button>
+  <button data-t="groups"><span>🏰</span>Groups</button>
+  <button data-t="bans"><span>🚫</span>Bans</button>
+  <button data-t="fleet"><span>🛡</span>Fleet</button>
+</nav>
+
+<script>
+var DATA_FILE = "panel-data-06d514ac6507.json";
+var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+var inTG = !!(tg && tg.initData);
+if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
+var D = null;
+
+function act(obj){
+  if (!inTG) return;
+  try { tg.sendData(JSON.stringify(obj)); } catch(e){}
+}
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function fmtT(ts){ if(!ts) return "—"; var d=new Date(ts*1000);
+  return d.toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}); }
+function dis(){ return inTG ? "" : " disabled"; }
+function noteNoTG(){ return inTG ? "" :
+  '<div class="note">ℹ️ Telegram ထဲက ဖွင့်မှ action လုပ်လို့ရမယ် — အခု ကြည့်ရန်သာ မြင်ရတာပါ</div>'; }
+
+document.getElementById("refreshBtn").addEventListener("click", function(){
+  if (inTG) act({action:"refresh"});
+  else location.reload();
+});
+document.querySelectorAll(".tabs button").forEach(function(b){
+  b.addEventListener("click", function(){
+    document.querySelectorAll(".tabs button").forEach(function(x){x.classList.remove("on");});
+    b.classList.add("on");
+    document.querySelectorAll(".tab").forEach(function(x){x.classList.remove("on");});
+    document.getElementById("tab-"+b.dataset.t).classList.add("on");
+  });
+});
+
+function render(){
+  if (!D) return;
+  document.getElementById("gentime").textContent = "🕐 " + fmtT(D.generated_at) + " က data";
+  var e = D.empire || {};
+  var fedBans = 0; (D.federations||[]).forEach(function(f){ fedBans += (f.banned||[]).length; });
+  var cells = [
+    [e.groups_total, "🌐 Empire groups စုစုပေါင်း", true],
+    [e.members_total==null ? "—" : e.members_total, "👥 Members (သိသလောက်)"],
+    [e.main_groups, "⭐ Main groups"],
+    [e.clone_groups, "🤖 Clone groups (" + e.clones + " bots)"],
+    [e.userbot_groups, "👤 Userbot groups"],
+    [e.userbots_live, "👤 Userbot live"],
+    [(D.federations||[]).length, "🌐 Federations"],
+    [fedBans, "🌐 Fed bans"],
+    [(D.gbans||[]).length, "🚫 GBAN စာရင်း"],
+    [e.userbots_stopped, "💤 Userbot stopped"]
+  ];
+  document.getElementById("dashGrid").innerHTML = cells.map(function(c){
+    return '<div class="stat'+(c[2]?" wide":"")+'"><b>'+esc(c[0])+'</b><small>'+esc(c[1])+'</small></div>';
+  }).join("");
+  document.getElementById("dashNote").innerHTML = noteNoTG();
+  renderGroups(); renderBans(); renderFleet();
+}
+
+var gFilter = "all";
+document.getElementById("gChips").addEventListener("click", function(ev){
+  var b = ev.target.closest(".chip"); if(!b) return;
+  document.querySelectorAll("#gChips .chip").forEach(function(x){x.classList.remove("on");});
+  b.classList.add("on"); gFilter = b.dataset.f; renderGroups();
+});
+document.getElementById("gSearch").addEventListener("input", renderGroups);
+
+function groupRow(g, layer, tagCls, tagTxt){
+  var link = g.link ? ' <a class="lnk" href="'+esc(g.link)+'" target="_blank">🔗 Link</a>' : "";
+  var mem = (g.members!=null) ? "👥 "+g.members : "";
+  var btns = "";
+  if (layer === "main") {
+    btns = '<div class="btns">' +
+      '<button class="act tgl'+(g.link_guard?"":" off")+'" data-a="toggle_link" data-cid="'+g.chat_id+'" data-on="'+(g.link_guard?0:1)+'">🔗 Link guard: <b>'+(g.link_guard?"ON":"OFF")+'</b></button>' +
+      '<button class="act tgl'+(g.shield?"":" off")+'" data-a="toggle_shield" data-cid="'+g.chat_id+'" data-on="'+(g.shield?0:1)+'">🛡 Shield: <b>'+(g.shield?"ON":"OFF")+'</b></button>' +
+      '</div>';
+  }
+  return '<div class="row"><div class="t">'+esc(g.title||"Unknown")+'</div>' +
+    '<div class="m"><span class="tag '+tagCls+'">'+tagTxt+'</span>' +
+    (mem?'<span>'+mem+'</span>':"") + link + '</div>' + btns + '</div>';
+}
+function renderGroups(){
+  if (!D) return;
+  var q = (document.getElementById("gSearch").value||"").toLowerCase();
+  var out = [];
+  function push(g, layer, cls, txt){
+    if (gFilter!=="all" && gFilter!==layer) return;
+    if (q && String(g.title||"").toLowerCase().indexOf(q)<0) return;
+    out.push(groupRow(g, layer, cls, txt));
+  }
+  (D.main_groups||[]).forEach(function(g){ push(g,"main","","⭐ Main"); });
+  (D.clones||[]).forEach(function(c){ (c.groups||[]).forEach(function(g){ push(g,"clone","cl","🤖 @"+(c.username||"?")); }); });
+  (D.userbots||[]).forEach(function(u){ (u.groups||[]).forEach(function(g){ push(g,"userbot","ub","👤 @"+(u.username||"?")); }); });
+  document.getElementById("gList").innerHTML =
+    out.length ? out.join("") : '<div class="empty">မတွေ့ပါ</div>';
+  document.querySelectorAll("#gList button.act").forEach(function(b){
+    b.addEventListener("click", function(){
+      act({action:b.dataset.a, chat_id:parseInt(b.dataset.cid,10), on:b.dataset.on==="1"});
+    });
+  });
+}
+
+function renderBans(){
+  if (!D) return;
+  var gl = D.gbans||[];
+  document.getElementById("gbanList").innerHTML = gl.length ? gl.map(function(id){
+    return '<div class="row"><span class="mono">'+esc(id)+'</span>' +
+      '<div class="btns"><button class="act" data-unban="'+id+'"'+dis()+'>↩️ Unban</button></div></div>';
+  }).join("") : '<div class="empty">GBAN စာရင်း လွတ်နေတယ်</div>';
+  document.querySelectorAll("[data-unban]").forEach(function(b){
+    b.addEventListener("click", function(){ act({action:"unban_gban", user_id:parseInt(b.dataset.unban,10)}); });
+  });
+  var fl = D.federations||[];
+  document.getElementById("fedList").innerHTML = fl.length ? fl.map(function(f){
+    var rows = (f.banned||[]).map(function(id){
+      return '<div class="row"><span class="mono">'+esc(id)+'</span>' +
+        '<div class="btns"><button class="act" data-unfban="'+esc(f.fed_id)+'" data-uid="'+id+'"'+dis()+'>↩️ Unfban</button></div></div>';
+    }).join("");
+    return '<h3 class="sec" style="font-size:13.5px;">🌐 '+esc(f.name||f.fed_id)+' ('+esc(f.fed_id)+') — '+(f.chats||0)+' groups, ban '+(f.banned||[]).length+'</h3>' +
+      (rows || '<div class="empty">ban မရှိပါ</div>');
+  }).join("") : '<div class="empty">Federation မရှိသေးပါ — /createfed နဲ့ အရင်ဆောက်ပါ</div>';
+  document.querySelectorAll("[data-unfban]").forEach(function(b){
+    b.addEventListener("click", function(){
+      act({action:"unfban", fed_id:b.dataset.unfban, user_id:parseInt(b.dataset.uid,10)});
+    });
+  });
+}
+document.getElementById("gbanBtn").addEventListener("click", function(){
+  if (!inTG) return;
+  var v = document.getElementById("gbanInput").value.trim();
+  var id = parseInt(v,10);
+  if (!id || id<=0) return;
+  act({action:"gban", user_id:id});
+});
+
+function renderFleet(){
+  if (!D) return;
+  document.getElementById("cloneList").innerHTML = (D.clones||[]).map(function(c){
+    return '<div class="row"><div class="t">🤖 @'+esc(c.username||"?")+'</div>' +
+      '<div class="m"><span>🏰 '+(c.groups||[]).length+' groups</span></div></div>';
+  }).join("") || '<div class="empty">clone မရှိပါ</div>';
+  document.getElementById("ubList").innerHTML = (D.userbots||[]).map(function(u){
+    var st = u.status==="running" ? "🟢 running" : "💤 "+esc(u.status||"?");
+    return '<div class="row"><div class="t">👤 @'+esc(u.username||"?")+'</div>' +
+      '<div class="m"><span>'+st+'</span><span>🏰 '+(u.groups||[]).length+' groups</span></div></div>';
+  }).join("") || '<div class="empty">userbot မရှိပါ</div>';
+}
+
+if (!inTG) {
+  ["gbanBtn","gbanInput"].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.disabled=true;
+  });
+}
+
+fetch(DATA_FILE + "?t=" + Date.now(), {cache:"no-store"})
+  .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+  .then(function(j){ D=j; render(); })
+  .catch(function(){
+    document.getElementById("fatal").style.display="block";
+    document.getElementById("gentime").textContent = "data မရသေးပါ";
+  });
+</script>
+</body>
+</html>
