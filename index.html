@@ -52,6 +52,10 @@
   button.act.gold{background:var(--gold); color:#171205; border-color:var(--gold); font-weight:700;}
   button.act.red{color:#ffb3ab; border-color:#6e2d24;}
   button.act:disabled{opacity:.38; cursor:default;}
+  a.act{display:inline-flex; align-items:center; text-decoration:none;
+        background:var(--card2); color:var(--txt); border:1px solid var(--line);
+        padding:7px 12px; border-radius:10px; font-size:12.5px; cursor:pointer;}
+  a.act.red{color:#ffb3ab; border-color:#6e2d24;}
   .tgl{position:relative;}
   .tgl b{color:var(--green);} .tgl.off b{color:var(--red);}
   h3.sec{color:var(--gold); font-size:15px; margin:18px 0 9px;}
@@ -89,10 +93,7 @@
 
   <div id="tab-bans" class="tab">
     <h3 class="sec">🚫 Global Ban (GBAN)</h3>
-    <div style="display:flex; gap:8px;">
-      <input type="number" id="gbanInput" placeholder="user_id ထည့်ပါ" style="flex:1;">
-      <button class="act red" id="gbanBtn" style="height:44px;">GBAN</button>
-    </div>
+    <div class="note" style="text-align:left; margin:0 0 10px;">GBAN အသစ် တင်ချင်ရင် bot မှာ <span class="mono">/gban &lt;id&gt;</span> သုံးပါ</div>
     <div id="gbanList"></div>
     <h3 class="sec">🌐 Federation Bans</h3>
     <div id="fedList"></div>
@@ -130,9 +131,7 @@ function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){
   return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
 function fmtT(ts){ if(!ts) return "—"; var d=new Date(ts*1000);
   return d.toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}); }
-function dis(){ return inTG ? "" : " disabled"; }
-function noteNoTG(){ return inTG ? "" :
-  '<div class="note">ℹ️ Telegram ထဲက ဖွင့်မှ action လုပ်လို့ရမယ် — အခု ကြည့်ရန်သာ မြင်ရတာပါ</div>'; }
+function noteTxt(){ return '<div class="note">ℹ️ Button နှိပ်ရင် Bot chat ကို သွားပြီး အလုပ် လုပ်ပေးမယ် — ရလဒ်ကို bot က ပြန်ပို့ပေးပါမယ်</div>'; }
 
 document.getElementById("refreshBtn").addEventListener("click", function(){
   if (inTG) act({action:"refresh"});
@@ -167,7 +166,7 @@ function render(){
   document.getElementById("dashGrid").innerHTML = cells.map(function(c){
     return '<div class="stat'+(c[2]?" wide":"")+'"><b>'+esc(c[0])+'</b><small>'+esc(c[1])+'</small></div>';
   }).join("");
-  document.getElementById("dashNote").innerHTML = noteNoTG();
+  document.getElementById("dashNote").innerHTML = noteTxt();
   renderGroups(); renderBans(); renderFleet();
 }
 
@@ -185,8 +184,8 @@ function groupRow(g, layer, tagCls, tagTxt){
   var btns = "";
   if (layer === "main") {
     btns = '<div class="btns">' +
-      '<button class="act tgl'+(g.link_guard?"":" off")+'" data-a="toggle_link" data-cid="'+g.chat_id+'" data-on="'+(g.link_guard?0:1)+'">🔗 Link guard: <b>'+(g.link_guard?"ON":"OFF")+'</b></button>' +
-      '<button class="act tgl'+(g.shield?"":" off")+'" data-a="toggle_shield" data-cid="'+g.chat_id+'" data-on="'+(g.shield?0:1)+'">🛡 Shield: <b>'+(g.shield?"ON":"OFF")+'</b></button>' +
+      '<a class="act tgl'+(g.link_guard?"":" off")+'" href="https://t.me/Drake_test_bot?start=pl'+g.chat_id+'">🔗 Link guard: <b>'+(g.link_guard?"ON":"OFF")+'</b></a>' +
+      '<a class="act tgl'+(g.shield?"":" off")+'" href="https://t.me/Drake_test_bot?start=ps'+g.chat_id+'">🛡 Shield: <b>'+(g.shield?"ON":"OFF")+'</b></a>' +
       '</div>';
   }
   return '<div class="row"><div class="t">'+esc(g.title||"Unknown")+'</div>' +
@@ -207,11 +206,6 @@ function renderGroups(){
   (D.userbots||[]).forEach(function(u){ (u.groups||[]).forEach(function(g){ push(g,"userbot","ub","👤 @"+(u.username||"?")); }); });
   document.getElementById("gList").innerHTML =
     out.length ? out.join("") : '<div class="empty">မတွေ့ပါ</div>';
-  document.querySelectorAll("#gList button.act").forEach(function(b){
-    b.addEventListener("click", function(){
-      act({action:b.dataset.a, chat_id:parseInt(b.dataset.cid,10), on:b.dataset.on==="1"});
-    });
-  });
 }
 
 function renderBans(){
@@ -219,34 +213,18 @@ function renderBans(){
   var gl = D.gbans||[];
   document.getElementById("gbanList").innerHTML = gl.length ? gl.map(function(id){
     return '<div class="row"><span class="mono">'+esc(id)+'</span>' +
-      '<div class="btns"><button class="act" data-unban="'+id+'"'+dis()+'>↩️ Unban</button></div></div>';
+      '<div class="btns"><a class="act" href="https://t.me/Drake_test_bot?start=pu'+id+'">↩️ Unban</a></div></div>';
   }).join("") : '<div class="empty">GBAN စာရင်း လွတ်နေတယ်</div>';
-  document.querySelectorAll("[data-unban]").forEach(function(b){
-    b.addEventListener("click", function(){ act({action:"unban_gban", user_id:parseInt(b.dataset.unban,10)}); });
-  });
   var fl = D.federations||[];
   document.getElementById("fedList").innerHTML = fl.length ? fl.map(function(f){
     var rows = (f.banned||[]).map(function(id){
       return '<div class="row"><span class="mono">'+esc(id)+'</span>' +
-        '<div class="btns"><button class="act" data-unfban="'+esc(f.fed_id)+'" data-uid="'+id+'"'+dis()+'>↩️ Unfban</button></div></div>';
+        '<div class="btns"><a class="act" href="https://t.me/Drake_test_bot?start=pf'+esc(f.fed_id)+'_'+id+'">↩️ Unfban</a></div></div>';
     }).join("");
     return '<h3 class="sec" style="font-size:13.5px;">🌐 '+esc(f.name||f.fed_id)+' ('+esc(f.fed_id)+') — '+(f.chats||0)+' groups, ban '+(f.banned||[]).length+'</h3>' +
       (rows || '<div class="empty">ban မရှိပါ</div>');
   }).join("") : '<div class="empty">Federation မရှိသေးပါ — /createfed နဲ့ အရင်ဆောက်ပါ</div>';
-  document.querySelectorAll("[data-unfban]").forEach(function(b){
-    b.addEventListener("click", function(){
-      act({action:"unfban", fed_id:b.dataset.unfban, user_id:parseInt(b.dataset.uid,10)});
-    });
-  });
 }
-document.getElementById("gbanBtn").addEventListener("click", function(){
-  if (!inTG) return;
-  var v = document.getElementById("gbanInput").value.trim();
-  var id = parseInt(v,10);
-  if (!id || id<=0) return;
-  act({action:"gban", user_id:id});
-});
-
 function renderFleet(){
   if (!D) return;
   document.getElementById("cloneList").innerHTML = (D.clones||[]).map(function(c){
@@ -258,12 +236,6 @@ function renderFleet(){
     return '<div class="row"><div class="t">👤 @'+esc(u.username||"?")+'</div>' +
       '<div class="m"><span>'+st+'</span><span>🏰 '+(u.groups||[]).length+' groups</span></div></div>';
   }).join("") || '<div class="empty">userbot မရှိပါ</div>';
-}
-
-if (!inTG) {
-  ["gbanBtn","gbanInput"].forEach(function(id){
-    var el=document.getElementById(id); if(el) el.disabled=true;
-  });
 }
 
 fetch(DATA_FILE + "?t=" + Date.now(), {cache:"no-store"})
